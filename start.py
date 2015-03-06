@@ -1,4 +1,5 @@
 import scrapePBP
+import scrapeBox
 
 from bs4 import BeautifulSoup
 from urllib2 import urlopen
@@ -31,13 +32,4 @@ for link in links:
 
 for game_id in game_ids:
     scrapePBP.scrape_PBP_data(game_id)
-
-#stats_table = soup.find("table","no_highlight stats_table")
-#rows = stats_table.find_all("tr")
-
-
-
-
-
-#scrapePBP.scrape_PBP_data("201503020MIA")
-#scrapePBP.scrape_PBP_data("201503020DAL")
+    scrapeBox.scrape_Box_data(game_id)
