@@ -1,0 +1,115 @@
+#scrapeBox.py
+
+from bs4 import BeautifulSoup
+from urllib2 import urlopen
+import requests
+import csv
+import os
+
+###   Helper functions   ###
+def extract_teamid(href):
+    tokens = href.split("/")
+    return tokens[2]
+
+def extract_player_id(href):
+    return os.path.splitext(os.path.basename(href))[0]
+
+
+def scrape_stats_table(soup,game_id,team_id,version):
+
+    #initialize a new CSV to write the GSW_basic table to
+    output_path = os.getcwd()+"\\Scraped Box\\"+game_id+" - "+str(team_id)+"_"+str(version)+" - Parsed.csv"
+    csv_file = open(output_path, "wb")
+    writer = csv.writer(csv_file, delimiter = ',')
+    
+    temp_table = soup.find("table",id=str(team_id)+"_"+str(version))
+    
+    #loop through the rows, finding and extracting the header row, and the player stats
+    
+    #first pull the header row (2nd tr in the thead)
+    header_tr = temp_table.find("thead").find_all("tr")[1]
+    
+    header_cols = header_tr.find_all("th")
+    header_row_values = []
+    
+    #initialize the header_row_values with the game_id, team_id, player id, and starter status
+    header_row_values.append('game_id')
+    header_row_values.append('team_id')
+    header_row_values.append('player_id')
+    header_row_values.append('starter')
+    
+    #add each statiscal column to the header row
+    for col in header_cols:
+        header_row_values.append(str(col.get('data-stat')))
+    
+    writer.writerow(header_row_values)
+    
+    
+    #now loop through each player row
+    player_trs = temp_table.find("tbody").find_all("tr", attrs = {'class':''})
+    
+    #initialize a count to determine if the player is a starter
+    player_count = 0
+    
+    for player_tr in player_trs:
+        #increment the player count
+        player_count += 1
+        #initialize a new row for the current player
+        player_row_values = []
+        #initialize the player row with game_id and team_id
+        player_row_values.append(str(game_id))
+        player_row_values.append(str(team_id))
+        
+        #find all the columns
+        player_tds = player_tr.find_all("td")
+        
+        #take the first td element and extract the player_id
+        player_id = extract_player_id(player_tds[0].find("a")['href'])
+        player_row_values.append(str(player_id))
+        
+        #determine if the player is a starter or not
+        if player_count <= 5:
+            player_starter = 1
+        else:
+            player_starter = 0
+        player_row_values.append(str(player_starter))
+    
+        #now append each of the table values to the current player's row
+        for player_td in player_tds:
+            player_row_values.append(str(player_td.text.strip()))
+    
+        writer.writerow(player_row_values)
+    
+    
+    csv_file.close()
+
+
+
+
+#game_id = "201503020BRK"
+
+
+def scrape_Box_data(game_id):
+
+    BASE_URL = "http://www.basketball-reference.com/boxscores/"+str(game_id)+".html"
+    
+    html = urlopen(BASE_URL).read()
+    soup = BeautifulSoup(html, 'html5lib')
+    
+    #find the abbreviations for the 2 teams playing
+    #looks like the easiest place is the table class = "nav_table stats_table"
+    
+    nav_table = soup.find("table","nav_table stats_table")
+    rows = nav_table.find_all("tr")
+    
+    #rows[2] has the away team info
+    away_team_id = extract_teamid(str(rows[2]))
+    #rows[3] has the home team info
+    home_team_id = extract_teamid(str(rows[3]))
+    
+    #using the home and away ids, scrape the player data
+    scrape_stats_table(soup,game_id,away_team_id,"basic")
+    scrape_stats_table(soup,game_id,away_team_id,"advanced")
+
+
+
