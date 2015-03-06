@@ -1,3 +1,5 @@
+#scrapePBP.py
+
 from bs4 import BeautifulSoup
 from urllib2 import urlopen
 import requests
@@ -19,7 +21,7 @@ def scrape_PBP_data(game_id):
     stats_table = soup.find("table","no_highlight stats_table")
     rows = stats_table.find_all("tr")
     
-    output_path = os.getcwd()+"\\Game output\\"+game_id+".csv"
+    output_path = os.getcwd()+"\\Scraped PBP\\"+game_id+" - Parsed.csv"
     #output_path = "C:/Users/ezuk/Desktop/PYTHON/NBA data scraping/Game output/201503020MIA.csv"
     
     csv_file = open(output_path, "wb")
@@ -47,7 +49,7 @@ def scrape_PBP_data(game_id):
     
         if str(row.get('id')).startswith("q"):
             current_qtr = row.get('id')
-            write_PBP_row(writer,'INFO',str(current_qtr),'','','','','')
+            write_PBP_row(writer,'INFO',str(current_qtr),None,None,None,None,None)
             continue
         
         td_list = row.findAll("td")
@@ -63,14 +65,14 @@ def scrape_PBP_data(game_id):
         elif len(td_list) == 2:
             current_time = td_list[0].renderContents().strip()
             current_general_event = td_list[1].renderContents().strip()
-            write_PBP_row(writer,'INFO',str(current_qtr),current_time,current_general_event,'','','')
+            write_PBP_row(writer,'INFO',str(current_qtr),current_time,current_general_event,None,None,None)
         elif len(td_list) == 6:
             #print td_list
             current_time = td_list[0].renderContents().strip()
             current_away_event = td_list[1].renderContents().strip()
             current_score = td_list[3].renderContents().strip()
             current_home_event = td_list[5].renderContents().strip()
-            write_PBP_row(writer,'PLAY',str(current_qtr),current_time,'',current_away_event,current_score,current_home_event)
+            write_PBP_row(writer,'PLAY',str(current_qtr),current_time,None,current_away_event,current_score,current_home_event)
         else:
             print "There is an error row that is "+str(len(td_list))+" tds long"
             print row
