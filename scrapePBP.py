@@ -6,6 +6,8 @@ import requests
 import csv
 import os
 
+# This is a test comment, added on Work Mac and committed via Github 5/2/2017
+
 #game_id = "201503020MIA"
 
 def write_PBP_row(writer,ROW_TYPE,QTR,TIME,GENERAL_EVENT,AWAY_EVENT,SCORE,HOME_EVENT):
